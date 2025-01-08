@@ -10,23 +10,24 @@ import CancelPage from "./pages/CancelPage"
 import Navbar from "./components/Navbar"
 import { Toaster } from "react-hot-toast"
 import { useUserStore } from "./stores/userStore"
-import { useCartStore } from "./stores/cartStore"
+// import { useCartStore } from "./stores/cartStore"
+import { getCart } from "./hooks/useCartStore"
 import { useEffect } from "react"
 import LoadingSpinner from "./components/LoadingSpinner"
 
 function App() {
   const { user, checkAuth, checkingAuth } = useUserStore()
 
-  const { cart, getCart } = useCartStore()
+  const { data } = getCart()
 
   useEffect(() => {
     checkAuth()
   }, [checkAuth])
 
-  useEffect(() => {
-    // if (!user) return
-    getCart()
-  }, [getCart])
+  // useEffect(() => {
+  //   // if (!user) return
+  //   getCart()
+  // }, [getCart])
 
   if (checkingAuth) return <LoadingSpinner />
 

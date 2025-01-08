@@ -9,7 +9,7 @@ export const getCart = async (req, res) => {
       )
       return { ...product.toJSON(), quantity: item.quantity }
     })
-    res.json(cartItems)
+    res.json({ cartItems, cartTotals: req.user.cartTotals })
   } catch (error) {
     console.log("Error in getCart controller ", error.message)
     res.status(500).json({ message: "Server error", error: error.message })
@@ -79,6 +79,17 @@ export const updateQuantity = async (req, res) => {
     }
   } catch (error) {
     console.log("Error in updateQuantity controller ", error.message)
+    res.status(500).json({ message: "Server error", error: error.message })
+  }
+}
+
+export const updateTotal = async (req, res) => {
+  try {
+    const user = req.user
+    user.cartTotals = req.body.cartTotals
+    await user.save()
+  } catch (error) {
+    console.log("Error in updateCartTotals controller ", error.message)
     res.status(500).json({ message: "Server error", error: error.message })
   }
 }

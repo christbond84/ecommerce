@@ -1,24 +1,26 @@
 import { motion } from "framer-motion"
-import { useEffect, useState } from "react"
-import { useCartStore } from "../stores/cartStore"
+import { useState } from "react"
+import LoadingSpinner from "./LoadingSpinner"
+import { getCoupon, removeCoupon, applyCoupon } from "../hooks/useCartStore"
 
 const GiftCouponCard = () => {
   const [userInputCode, setUserInputCode] = useState("")
-  const { coupon, isCouponApplied, applyCoupon, getCoupon, removeCoupon } =
-    useCartStore()
-
-  useEffect(() => {
-    getCoupon()
-  }, [getCoupon])
+  const { data: coupon, isLoading } = getCoupon()
+  const { mutate: removeCouponMutation, isPending: isPendingRemove } =
+    removeCoupon()
+  const { mutate: applyCouponMutation, isPending: isPendingapply } =
+    applyCoupon()
 
   const handleApplyCoupon = () => {
     if (!userInputCode) return
-    applyCoupon(userInputCode)
+    applyCouponMutation(userInputCode)
   }
   const handleRemoveCoupon = () => {
-    removeCoupon()
+    removeCouponMutation()
     setUserInputCode("")
   }
+
+  if (isLoading || isPendingRemove || isPendingapply) return <LoadingSpinner />
   return (
     <motion.div
       className="space-y-4 rounded-lg border border-gray-700 bg-gray-800 p-4 shadow-sm sm:p-6"
@@ -56,7 +58,7 @@ const GiftCouponCard = () => {
           Apply Code
         </motion.button>
       </div>
-      {isCouponApplied && coupon && (
+      {coupon && !coupon.isActive && (
         <div className="mt-4">
           <h3 className="text-lg font-medium text-gray-300">Applied Coupon</h3>
 

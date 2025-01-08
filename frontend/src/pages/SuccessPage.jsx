@@ -1,19 +1,19 @@
 import { ArrowRight, CheckCircle, HandHeart } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
-import { useCartStore } from "../stores/cartStore.js"
+import { clearCart } from "../hooks/useCartStore.js"
 import { axiosInstance } from "../lib/axios.js"
 import Confetti from "react-confetti"
 
 const SuccessPage = () => {
   const [isProcessing, setIsProcessing] = useState(true)
-  const { clearCart } = useCartStore()
+  const { mutate: clearCartMutation } = clearCart()
   const [error, setError] = useState(null)
 
   const handleSuccess = async (sessionId) => {
     try {
       await axiosInstance.post("/payments/success", { sessionId })
-      clearCart()
+      clearCartMutation()
     } catch (error) {
       console.log(error)
     } finally {

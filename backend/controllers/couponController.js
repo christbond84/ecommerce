@@ -28,6 +28,8 @@ export const validateCoupon = async (req, res) => {
       await coupon.save()
       return res.status(404).json({ message: "Coupon expired" })
     }
+    coupon.isActive = false
+    await coupon.save()
 
     res.json({
       message: "Coupon is valid",
@@ -36,6 +38,21 @@ export const validateCoupon = async (req, res) => {
     })
   } catch (error) {
     console.log("Error in validateCoupon controller ", error.message)
+    res.status(500).json({ message: "Server error", error: error.message })
+  }
+}
+
+export const acivateCoupon = async (req, res) => {
+  try {
+    const coupon = await Coupon.findOneAndUpdate(
+      {
+        userId: req.user._id,
+      },
+      { isActive: true }
+    )
+    res.json(coupon || null)
+  } catch (error) {
+    console.log("Error in getCoupon controller ", error.message)
     res.status(500).json({ message: "Server error", error: error.message })
   }
 }

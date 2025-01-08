@@ -1,6 +1,5 @@
 import { create } from "zustand"
 import { axiosInstance } from "../lib/axios.js"
-import axios from "../lib/axios.js"
 import toast from "react-hot-toast"
 
 export const useCartStore = create((set, get) => ({
@@ -47,7 +46,7 @@ export const useCartStore = create((set, get) => ({
   getCart: async () => {
     try {
       const res = await axiosInstance.get("/cart")
-      set({ cart: res.data })
+      set({ cart: res.data.cartItems })
       get().calculateTotals()
     } catch (error) {
       // toast.error(

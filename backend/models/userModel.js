@@ -31,6 +31,16 @@ const userSchema = new mongoose.Schema(
         },
       },
     ],
+    cartTotals: {
+      subtotal: {
+        type: Number,
+        default: 0,
+      },
+      total: {
+        type: Number,
+        default: 0,
+      },
+    },
     role: {
       type: String,
       enum: ["customer", "admin"],
