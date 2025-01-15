@@ -1,18 +1,19 @@
 import toast from "react-hot-toast"
-import { useUserStore } from "../stores/userStore"
+import { useQueryClient } from "@tanstack/react-query"
 import { ShoppingCart } from "lucide-react"
-import { addToCart } from "../hooks/useCartStore"
+import { useCartStore } from "../stores/cartStore"
 
 const ProductCard = ({ product }) => {
-  const { mutate: addToCartMutation } = addToCart()
-  const { user } = useUserStore()
+  const queryClient = useQueryClient()
+  const user = queryClient.getQueryData(["user"])
+  const { addToCart } = useCartStore()
+
   const handleAddToCart = () => {
     if (!user) {
       toast.error("Please login to add products to cart", { id: "login" })
       return
     } else {
-      addToCartMutation(product)
-      toast.success("Product added to cart", { id: "added" })
+      addToCart(product)
     }
   }
 

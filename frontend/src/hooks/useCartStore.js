@@ -18,6 +18,7 @@ export const getCart = () => {
     },
     staleTime: Infinity,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   })
 }
 
@@ -50,15 +51,13 @@ export const clearCart = () => {
 }
 
 export const addToCart = () => {
-  const { mutate: calculateMutation } = calculateTotals()
-
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (product) => {
       const res = await axiosInstance.post("/cart", { productId: product._id })
     },
     onSuccess: () => {
-      calculateMutation()
-      toast.success("Product successfully added", { id: "added" })
+      queryClient.invalidateQueries({ queryKey: ["cart"] })
     },
     onError: () => {
       toast.error(
@@ -71,14 +70,13 @@ export const addToCart = () => {
 }
 
 export const removeFromCart = () => {
-  const { mutate: calculateMutation } = calculateTotals()
-
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (productId) => {
       await axiosInstance.delete(`/cart/${productId}`)
     },
     onSuccess: () => {
-      calculateMutation()
+      queryClient.invalidateQueries({ queryKey: ["cart"] })
     },
     onError: () => {
       toast.error(
@@ -91,11 +89,11 @@ export const removeFromCart = () => {
 }
 
 export const updateQuantity = () => {
-  const { mutate: calculateMutation } = calculateTotals()
   const { mutate: removeFromCartMutation } = removeFromCart()
-
+  const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (productId, quantity) => {
+    mutationFn: async (variables) => {
+      const { productId, quantity } = variables
       if (quantity === 0) {
         removeFromCartMutation(productId)
         return
@@ -103,7 +101,45 @@ export const updateQuantity = () => {
       await axiosInstance.put(`/cart/${productId}`, { quantity })
     },
     onSuccess: () => {
-      calculateMutation()
+      queryClient.invalidateQueries({ queryKey: ["cart"] })
+    },
+    onError: () => {
+      toast.error(
+        error.response.data.error ||
+          error.response.data.message ||
+          "An error occured"
+      )
+    },
+  })
+}
+
+export const saveCart = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (cart) => {
+      await axiosInstance.post(`/cart/saveCart`, { cart })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cart"] })
+    },
+    onError: () => {
+      toast.error(
+        error.response.data.error ||
+          error.response.data.message ||
+          "An error occured"
+      )
+    },
+  })
+}
+
+export const resetCart = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      await axiosInstance.post(`/cart/resetCart`)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cart"] })
     },
     onError: () => {
       toast.error(
@@ -131,20 +167,19 @@ export const getCoupon = () => {
     },
     staleTime: Infinity,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   })
 }
 
 export const applyCoupon = () => {
-  const { mutate: calculateMutation } = calculateTotals()
-
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (code) => {
       const res = await axiosInstance.post("/coupons/validate", { code })
       toast.success("Coupon applied successfully")
     },
     onSuccess: () => {
-      const { isSuccess } = getCoupon()
-      isSuccess && calculateMutation()
+      queryClient.invalidateQueries({ queryKey: ["coupon"] })
     },
     onError: () => {
       toast.error(
@@ -157,50 +192,14 @@ export const applyCoupon = () => {
 }
 
 export const removeCoupon = () => {
-  const { mutate: calculateMutation } = calculateTotals()
-
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async () => {
       const res = await axiosInstance.post("/coupons/activate")
       toast.success("Coupon removed successfully")
     },
     onSuccess: () => {
-      const { isSuccess } = getCoupon()
-      isSuccess && calculateMutation()
-    },
-    onError: () => {
-      toast.error(
-        error.response.data.error ||
-          error.response.data.message ||
-          "An error occured"
-      )
-    },
-  })
-}
-
-const calculateTotals = () => {
-  const queryClient = useQueryClient()
-  const { data: cart, isSuccessCart } = getCart()
-  const { data: coupon, isSuccessCoupon } = getCoupon()
-  return useMutation({
-    mutationFn: async () => {
-      if (isSuccessCart && isSuccessCoupon) {
-        const subtotal = cart.cartItems.reduce(
-          (sum, item) => sum + item.price * item.quantity,
-          0
-        )
-
-        let total = subtotal
-        if (coupon && !coupon.isActive)
-          total = total - (subtotal * coupon.discountPercentage) / 100
-
-        const cartTotals = { subtotal, total }
-
-        await axiosInstance.post("/cart/updateTotal", { cartTotals })
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cart"] })
+      queryClient.invalidateQueries({ queryKey: ["coupon"] })
     },
     onError: () => {
       toast.error(

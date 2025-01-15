@@ -56,6 +56,45 @@ export const createProduct = async (req, res) => {
   }
 }
 
+export const updateProduct = async (req, res) => {
+  try {
+    const { _id, name, description, price, image, category } = req.body
+    const updateProduct = await Product.findById(_id)
+
+    if (updateProduct) {
+      if (updateProduct.image) {
+        const publicId = updateProduct.image.split("/").pop().split(".")[0]
+        try {
+          await cloudinary.uploader.destroy(`products/${publicId}`)
+          console.log("Deleted image from cloudinary")
+        } catch (error) {
+          console.log("Error deleting image from cloudinary", error.message)
+        }
+      }
+
+      let cloudinaryResponse = null
+      if (image) {
+        cloudinaryResponse = await cloudinary.uploader.upload(image, {
+          folder: "products",
+        })
+      }
+      updateProduct.name = name
+      updateProduct.description = description
+      updateProduct.price = price
+      updateProduct.image = cloudinaryResponse?.secure_url || ""
+      updateProduct.category = category
+
+      const updatedProduct = await updateProduct.save()
+      return res.status(200).json({ updatedProduct })
+    } else {
+      return res.status(404).json({ message: "Product not found" })
+    }
+  } catch (error) {
+    console.log("Error in toggleFeatured controller ", error.message)
+    res.status(500).json({ message: "Server error", error: error.message })
+  }
+}
+
 export const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)

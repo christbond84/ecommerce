@@ -1,18 +1,13 @@
 import { create } from "zustand"
-import { axiosInstance } from "../lib/axios.js"
 import toast from "react-hot-toast"
 
 export const useCartStore = create((set, get) => ({
-  cart: [],
-  coupon: null,
-  total: 0,
-  subtotal: 0,
-  isCouponApplied: false,
+  zucart: [],
+  zucoupon: null,
 
-  getCoupon: async () => {
+  setCoupon: (couponData) => {
     try {
-      const res = await axiosInstance.get("/coupons")
-      set({ coupon: res.data })
+      set(() => ({ zucoupon: couponData }))
     } catch (error) {
       toast.error(
         error.response.data.error ||
@@ -22,12 +17,20 @@ export const useCartStore = create((set, get) => ({
     }
   },
 
-  applyCoupon: async (code) => {
+  applyCoupon: () => {
     try {
-      const res = await axiosInstance.post("/coupons/validate", { code })
-      set({ coupon: res.data, isCouponApplied: true })
-      get().calculateTotals()
-      toast.success("Coupon applied successfully")
+      const { zucoupon } = get()
+      if (zucoupon) {
+        set((prev) => ({
+          zucoupon: {
+            ...prev.zucoupon,
+            isActive: false,
+          },
+        }))
+        get().calculateTotals()
+      } else {
+        toast.error("Coupon not found")
+      }
     } catch (error) {
       toast.error(
         error.response.data.error ||
@@ -38,17 +41,22 @@ export const useCartStore = create((set, get) => ({
   },
 
   removeCoupon: () => {
-    set({ coupon: null, isCouponApplied: false })
+    set((prev) => ({
+      zucoupon: {
+        ...prev.zucoupon,
+        isActive: true,
+      },
+    }))
     get().calculateTotals()
-    toast.success("Coupon removed successfully")
+    // toast.success("Coupon removed successfully")
   },
 
-  getCart: async () => {
+  setCart: (cartData) => {
     try {
-      const res = await axiosInstance.get("/cart")
-      set({ cart: res.data.cartItems })
+      set(() => ({ zucart: cartData }))
       get().calculateTotals()
     } catch (error) {
+      console.log(error)
       // toast.error(
       //   error.response.data.error ||
       //     error.response.data.message ||
@@ -56,26 +64,32 @@ export const useCartStore = create((set, get) => ({
       // )
     }
   },
-  clearCart: async () => {
-    await axiosInstance.delete("/cart")
-    set({ cart: [], coupon: null, total: 0, subtotal: 0 })
+  clearCart: () => {
+    set(() => ({ zucart: [] }))
   },
 
-  addToCart: async (product) => {
+  clearStore: () => {
+    set(() => ({ zucart: [] }))
+    set(() => ({ zucoupon: null }))
+  },
+
+  addToCart: (product) => {
     try {
-      const res = await axiosInstance.post("/cart", { productId: product._id })
-      toast.success("Product successfully added", { id: "added" })
       set((prev) => {
-        const existingItem = prev.cart.find((item) => item._id === product._id)
+        const existingItem = prev.zucart.cartItems.find(
+          (item) => item._id === product._id
+        )
         const newCart = existingItem
-          ? prev.cart.map((item) =>
+          ? prev.zucart.cartItems.map((item) =>
               item._id === product._id
                 ? { ...product, quantity: item.quantity + 1 }
                 : item
             )
-          : [...prev.cart, { ...product, quantity: 1 }]
-        return { cart: newCart }
+          : [...prev.zucart.cartItems, { ...product, quantity: 1 }]
+
+        return { zucart: { ...prev.zucart, cartItems: newCart } }
       })
+      // toast.success("Product successfully added", { id: "added" })
       get().calculateTotals()
     } catch (error) {
       toast.error(
@@ -88,9 +102,13 @@ export const useCartStore = create((set, get) => ({
 
   removeFromCart: async (productId) => {
     try {
-      await axiosInstance.delete(`/cart/${productId}`)
       set((prev) => ({
-        cart: prev.cart.filter((item) => item._id !== productId),
+        zucart: {
+          ...prev.zucart,
+          cartItems: prev.zucart.cartItems.filter(
+            (item) => item._id !== productId
+          ),
+        },
       }))
       get().calculateTotals()
     } catch (error) {
@@ -105,26 +123,33 @@ export const useCartStore = create((set, get) => ({
   updateQuantity: async (productId, quantity) => {
     if (quantity === 0) {
       get().removeFromCart(productId)
-      return
+    } else {
+      set((prev) => ({
+        zucart: {
+          ...prev.zucart,
+          cartItems: prev.zucart.cartItems.map((item) =>
+            item._id === productId ? { ...item, quantity } : item
+          ),
+        },
+      }))
     }
-    await axiosInstance.put(`/cart/${productId}`, { quantity })
-    set((prev) => ({
-      cart: prev.cart.map((item) =>
-        item._id === productId ? { ...item, quantity } : item
-      ),
-    }))
     get().calculateTotals()
   },
 
   calculateTotals: () => {
-    const { cart, coupon } = get()
-    const subtotal = cart.reduce(
+    const { zucart, zucoupon } = get()
+    const subtotal = zucart.cartItems.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0
     )
     let total = subtotal
-    if (coupon && get().isCouponApplied)
-      total = total - (subtotal * coupon.discountPercentage) / 100
-    set({ total, subtotal })
+    if (zucoupon && !zucoupon.isActive)
+      total = total - (subtotal * zucoupon.discountPercentage) / 100
+    set((prev) => ({
+      zucart: {
+        ...prev.zucart,
+        cartTotals: { subtotal, total },
+      },
+    }))
   },
 }))

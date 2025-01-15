@@ -1,7 +1,10 @@
-import { useEffect } from "react"
 import CategoryItem from "../components/CategoryItem"
-import { useProductStore } from "../stores/useProductStore"
+import { fetchFeaturedProducts } from "../hooks/useProductsStore"
 import FeaturedProducts from "../components/FeaturedProducts"
+import { useQueryClient } from "@tanstack/react-query"
+import { getCart, getCoupon } from "../hooks/useCartStore"
+import { useCartStore } from "../stores/cartStore"
+import { useEffect } from "react"
 
 const categories = [
   { href: "/jeans", name: "Jeans", imageUrl: "/jeans.jpg" },
@@ -11,14 +14,42 @@ const categories = [
   { href: "/jackets", name: "Jackets", imageUrl: "/jackets.jpg" },
   { href: "/suits", name: "Suits", imageUrl: "/suits.jpg" },
   { href: "/bags", name: "Bags", imageUrl: "/bags.jpg" },
+  { href: "/smartwatches", name: "smartwatches", imageUrl: "/smartwatch.jpg" },
 ]
 
 const HomePage = () => {
-  const { fetchFeaturedProducts, products, loading } = useProductStore()
+  const queryClient = useQueryClient()
+  const { data: cartData, refetch: refetchCart } = getCart()
+  const { data: couponData, refetch: refetchCoupon } = getCoupon()
+  const { setCart, setCoupon } = useCartStore()
+
+  const {
+    mutate: fetchFeaturedProductsMutation,
+    isPending,
+    isSuccess,
+  } = fetchFeaturedProducts()
 
   useEffect(() => {
-    fetchFeaturedProducts()
-  }, [fetchFeaturedProducts])
+    fetchFeaturedProductsMutation()
+  }, [])
+
+  useEffect(() => {
+    refetchCart()
+    refetchCoupon()
+
+    if (cartData) {
+      setCart(cartData)
+    }
+    if (couponData) {
+      setCoupon(couponData)
+    }
+  }, [cartData, setCart, couponData, setCoupon])
+
+  let products
+  if (isSuccess) {
+    products = queryClient.getQueryData(["products"])
+  }
+
   return (
     <div className="relative min-h-screen text-white overflow-hidden">
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -33,7 +64,7 @@ const HomePage = () => {
             <CategoryItem category={category} key={category.name} />
           ))}
         </div>
-        {!loading && products.length > 0 && (
+        {!isPending && products?.length > 0 && (
           <FeaturedProducts featuredProducts={products} />
         )}
       </div>

@@ -1,15 +1,14 @@
 import { Link } from "react-router-dom"
-import { useQueryClient } from "@tanstack/react-query"
 import { motion } from "framer-motion"
 import { ShoppingCart } from "lucide-react"
 import CartItem from "../components/CartItem"
 import RecommendedProducts from "../components/RecommendedProducts"
 import OrderSummary from "../components/OrderSummary"
 import GiftCouponCard from "../components/GiftCouponCard"
+import { useCartStore } from "../stores/cartStore"
 
 const CartPage = () => {
-  const queryClient = useQueryClient()
-  const cart = queryClient.getQueryData(["cart"])
+  const { zucart } = useCartStore()
 
   const EmptyCartUI = () => (
     <motion.div
@@ -41,16 +40,16 @@ const CartPage = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            {cart?.cartItems.length === 0 ? (
+            {zucart?.cartItems?.length === 0 || zucart?.length === 0 ? (
               <EmptyCartUI />
             ) : (
-              cart?.cartItems.map((item) => (
+              zucart?.cartItems?.map((item) => (
                 <CartItem key={item._id} item={item} />
               ))
             )}
-            {cart?.cartItems.length > 0 && <RecommendedProducts />}
+            {zucart?.cartItems?.length > 0 && <RecommendedProducts />}
           </motion.div>
-          {cart?.cartItems.length > 0 && (
+          {zucart?.cartItems?.length > 0 && (
             <motion.div
               className="mx-auto mt-6 max-w-4xl flex-1 space-y-6 lg:mt-0 lg:w-full"
               initial={{ opacity: 0, x: 20 }}

@@ -1,25 +1,34 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { LogIn, Mail, Lock, ArrowRight, Loader } from "lucide-react"
-import { useUserStore } from "../stores/userStore"
+import { login } from "../hooks/useUserStore"
+import toast from "react-hot-toast"
 
 const LoginPage = () => {
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   })
 
-  const { loading, login } = useUserStore()
+  const { mutateAsync: loginMutation, isPending } = login()
 
   const onChangeHandler = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value })
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
+    let res = null
     e.preventDefault()
-    login(formData)
+    res = await loginMutation(formData)
+    if (!res) {
+      toast.error("Invalid credentials")
+    } else {
+      navigate("/")
+    }
   }
+
   return (
     <div className="flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <motion.div
@@ -92,9 +101,9 @@ const LoginPage = () => {
 							rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600
 							 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2
 							  focus:ring-emerald-500 transition duration-150 ease-in-out disabled:opacity-50"
-              disabled={loading}
+              disabled={isPending}
             >
-              {loading ? (
+              {isPending ? (
                 <>
                   <Loader
                     className="mr-2 h-5 w-5 animate-spin"

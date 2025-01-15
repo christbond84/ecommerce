@@ -2,13 +2,7 @@ import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
 import { axiosInstance } from "../lib/axios.js"
 import LoadingSpinner from "./LoadingSpinner"
-import {
-  Users,
-  Package,
-  ShoppingCart,
-  DollarSign,
-  ConstructionIcon,
-} from "lucide-react"
+import { Users, Package, ShoppingCart, DollarSign } from "lucide-react"
 import {
   LineChart,
   Line,

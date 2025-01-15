@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react"
 import { ShoppingCart, ChevronLeft, ChevronRight, Settings } from "lucide-react"
-import { addToCart } from "../hooks/useCartStore"
+import { useCartStore } from "../stores/cartStore"
+import { useQueryClient } from "@tanstack/react-query"
+import toast from "react-hot-toast"
 
 const FeaturedProducts = ({ featuredProducts }) => {
+  const queryClient = useQueryClient()
+  const user = queryClient.getQueryData(["user"])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [itemsPerPage, setItemsPerPage] = useState(4)
 
-  const { mutate: addToCartMutation } = addToCart()
+  const { addToCart } = useCartStore()
 
   useEffect(() => {
     const handleResize = () => {
@@ -29,6 +33,15 @@ const FeaturedProducts = ({ featuredProducts }) => {
 
   const startDisabled = currentIndex === 0
   const endDisabled = currentIndex >= featuredProducts.length - itemsPerPage
+
+  const handleAddToCart = (product) => {
+    if (!user) {
+      toast.error("Please login to add products to cart", { id: "login" })
+      return
+    } else {
+      addToCart(product)
+    }
+  }
 
   return (
     <div className="py-12">
@@ -72,7 +85,7 @@ const FeaturedProducts = ({ featuredProducts }) => {
                         ${product.price.toFixed(2)}
                       </p>
                       <button
-                        onClick={() => addToCartMutation(product)}
+                        onClick={() => handleAddToCart(product)}
                         className="w-full bg-emerald-600 hover:bg-emerald-500 
 												text-white font-semibold py-2 px-4 rounded transition-colors 
 												duration-300 flex items-center justify-center"

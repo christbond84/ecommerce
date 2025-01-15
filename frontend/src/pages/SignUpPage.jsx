@@ -1,10 +1,11 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { UserPlus, Mail, Lock, User, ArrowRight, Loader } from "lucide-react"
 import { motion } from "framer-motion"
-import { useUserStore } from "../stores/userStore"
+import { signup } from "../hooks/useUserStore"
 
 const SignUpPage = () => {
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -12,16 +13,22 @@ const SignUpPage = () => {
     confirmPassword: "",
   })
 
-  const { loading, signup } = useUserStore()
+  const { mutateAsync: signupMutation, isPending } = signup()
 
   const onChangeHandler = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value })
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    signup(formData)
+    let res = null
+    e.preventDefault()
+    res = await signupMutation(formData)
+    if (res !== null) {
+      navigate("/")
+    }
   }
+
   return (
     <div className="flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <motion.div
@@ -140,9 +147,9 @@ const SignUpPage = () => {
 							rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600
 							 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2
 							  focus:ring-emerald-500 transition duration-150 ease-in-out disabled:opacity-50"
-              disabled={loading}
+              disabled={isPending}
             >
-              {loading ? (
+              {isPending ? (
                 <>
                   <Loader
                     className="mr-2 h-5 w-5 animate-spin"

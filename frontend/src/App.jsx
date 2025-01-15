@@ -8,28 +8,15 @@ import CartPage from "./pages/CartPage"
 import SuccessPage from "./pages/SuccessPage"
 import CancelPage from "./pages/CancelPage"
 import Navbar from "./components/Navbar"
+import UpdateProductForm from "./components/UpdateProductForm"
 import { Toaster } from "react-hot-toast"
-import { useUserStore } from "./stores/userStore"
-// import { useCartStore } from "./stores/cartStore"
-import { getCart } from "./hooks/useCartStore"
-import { useEffect } from "react"
+import { checkAuth } from "./hooks/useUserStore"
 import LoadingSpinner from "./components/LoadingSpinner"
 
 function App() {
-  const { user, checkAuth, checkingAuth } = useUserStore()
+  const { data: user } = checkAuth()
 
-  const { data } = getCart()
-
-  useEffect(() => {
-    checkAuth()
-  }, [checkAuth])
-
-  // useEffect(() => {
-  //   // if (!user) return
-  //   getCart()
-  // }, [getCart])
-
-  if (checkingAuth) return <LoadingSpinner />
+  // if (isLoading) return <LoadingSpinner />
 
   return (
     <div className="min-h-screen bg-gray-900 text-white relative overflow-hidden">
@@ -42,18 +29,9 @@ function App() {
       <div className="relative z-50 pt-20">
         <Navbar />
         <Routes>
-          <Route
-            path="/"
-            element={user ? <HomePage /> : <Navigate to={"/login"} />}
-          />
-          <Route
-            path="/signup"
-            element={!user ? <SignUpPage /> : <Navigate to={"/"} />}
-          />
-          <Route
-            path="/login"
-            element={!user ? <LoginPage /> : <Navigate to={"/"} />}
-          />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/login" element={user ? <HomePage /> : <LoginPage />} />
           <Route
             path="/dashboard"
             element={
@@ -65,18 +43,13 @@ function App() {
             }
           />
           <Route path="/category/:category" element={<CategoryPage />} />
+          <Route path="/updateproduct" element={<UpdateProductForm />} />
           <Route
             path="/cart"
             element={user ? <CartPage /> : <Navigate to={"/login"} />}
           />
-          <Route
-            path="/success"
-            element={user ? <SuccessPage /> : <Navigate to={"/login"} />}
-          />
-          <Route
-            path="/cancel"
-            element={user ? <CancelPage /> : <Navigate to={"/login"} />}
-          />
+          <Route path="/success" element={<SuccessPage />} />
+          <Route path="/cancel" element={<CancelPage />} />
         </Routes>
       </div>
       <Toaster />

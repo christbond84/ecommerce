@@ -1,19 +1,25 @@
 import { ArrowRight, CheckCircle, HandHeart } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
-import { clearCart } from "../hooks/useCartStore.js"
+import { resetCart } from "../hooks/useCartStore.js"
 import { axiosInstance } from "../lib/axios.js"
 import Confetti from "react-confetti"
 
 const SuccessPage = () => {
   const [isProcessing, setIsProcessing] = useState(true)
-  const { mutate: clearCartMutation } = clearCart()
+  const [orderNumber, setOrderNumber] = useState(0)
+  const { mutate: resetCartMutation } = resetCart()
   const [error, setError] = useState(null)
+
+  const sessionId = new URLSearchParams(window.location.search).get(
+    "session_id"
+  )
 
   const handleSuccess = async (sessionId) => {
     try {
-      await axiosInstance.post("/payments/success", { sessionId })
-      clearCartMutation()
+      const order = await axiosInstance.post("/payments/success", { sessionId })
+      setOrderNumber(order?.data?.orderId)
+      resetCartMutation()
     } catch (error) {
       console.log(error)
     } finally {
@@ -21,9 +27,6 @@ const SuccessPage = () => {
     }
   }
 
-  const sessionId = new URLSearchParams(window.location.search).get(
-    "session_id"
-  )
   useEffect(() => {
     if (sessionId) {
       handleSuccess(sessionId)
@@ -61,7 +64,7 @@ const SuccessPage = () => {
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-400">Order number</span>
               <span className="text-sm font-semibold text-emerald-400">
-                #12345
+                {orderNumber}
               </span>
             </div>
             <div className="flex items-center justify-between">

@@ -1,16 +1,25 @@
-import React, { useEffect } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import { useParams } from "react-router-dom"
-import { useProductStore } from "../stores/useProductStore"
+import { fetchProductsByCategory } from "../hooks/useProductsStore"
 import { motion } from "framer-motion"
 import ProductCard from "../components/ProductCard"
+import { useEffect } from "react"
 
 const CategoryPage = () => {
+  const queryClient = useQueryClient()
   const { category } = useParams()
-  const { products, fetchProductsByCategory } = useProductStore()
+
+  const { mutate: fetchProductsByCategoryMutation, isSuccess } =
+    fetchProductsByCategory()
 
   useEffect(() => {
-    fetchProductsByCategory(category)
-  }, [fetchProductsByCategory, category])
+    fetchProductsByCategoryMutation(category)
+  }, [])
+
+  let products
+  if (isSuccess) {
+    products = queryClient.getQueryData(["products"])
+  }
 
   return (
     <div className="min-h-screen">

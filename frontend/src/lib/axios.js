@@ -5,22 +5,26 @@ const refresh = useRefreshToken()
 
 export default axios.create({
   baseURL:
-    import.meta.mode === "development" ? "http://localhost:5000/api" : "/api",
+    import.meta.env.MODE === "deve-lopment"
+      ? "http://localhost:5000/api"
+      : "/api",
   withCredentials: true,
 })
 
 export const axiosInstance = axios.create({
   baseURL:
-    import.meta.mode === "development" ? "http://localhost:5000/api" : "/api",
+    import.meta.env.MODE === "deve-lopment"
+      ? "http://localhost:5000/api"
+      : "/api",
   withCredentials: true,
 })
 
-// axiosInstance.interceptors.request.use(
-//   (config) => {
-//     return config
-//   },
-//   (error) => Promise.reject(error)
-// )
+axiosInstance.interceptors.request.use(
+  (config) => {
+    return config
+  },
+  (error) => Promise.reject(error)
+)
 
 axiosInstance.interceptors.response.use(
   (response) => response,

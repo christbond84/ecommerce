@@ -60,6 +60,7 @@ export const updateQuantity = async (req, res) => {
     const { id: productId } = req.params
     const { quantity } = req.body
     const user = req.user
+    console.log(quantity)
 
     const existingItem = user.cartItems.find(
       (item) => item._id.toString() === productId
@@ -90,6 +91,36 @@ export const updateTotal = async (req, res) => {
     await user.save()
   } catch (error) {
     console.log("Error in updateCartTotals controller ", error.message)
+    res.status(500).json({ message: "Server error", error: error.message })
+  }
+}
+
+export const saveCart = async (req, res) => {
+  try {
+    const { cart } = req.body
+    const cartItems = cart.cartItems.map((item) => ({
+      _id: item._id,
+      quantity: item.quantity,
+    }))
+    const user = req.user
+    user.cartTotals = cart.cartTotals
+    user.cartItems = cartItems
+    await user.save()
+    res.json({ message: "Cart Saved" })
+  } catch (error) {
+    console.log("Error in saveCart controller ", error.message)
+    res.status(500).json({ message: "Server error", error: error.message })
+  }
+}
+export const resetCart = async (req, res) => {
+  try {
+    const user = req.user
+    user.cartTotals = { subtotal: 0, total: 0 }
+    user.cartItems = []
+    await user.save()
+    res.json({ message: "Cart reset" })
+  } catch (error) {
+    console.log("Error in saveCart controller ", error.message)
     res.status(500).json({ message: "Server error", error: error.message })
   }
 }

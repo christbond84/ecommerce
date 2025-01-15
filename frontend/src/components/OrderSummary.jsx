@@ -1,26 +1,29 @@
 import { motion } from "framer-motion"
-import { useCartStore } from "../stores/cartStore.js"
 import { Link } from "react-router-dom"
 import { MoveRight } from "lucide-react"
-import { loadStripe } from "@stripe/stripe-js"
 import { axiosInstance } from "../lib/axios.js"
+import { loadStripe } from "@stripe/stripe-js"
+import { useCartStore } from "../stores/cartStore.js"
+import { saveCart } from "../hooks/useCartStore.js"
 
 const stripePromise = loadStripe(
   "pk_test_51QVpb5L2cu2SP5Jax8sfseZVQmliFn5QDaw8447TuWAvst3b8ui1dz5tHv8g9wcNfAjLIECopsW35JJIHyxlmFkC00yFjLhzy8"
 )
 
 const OrderSummary = () => {
-  const { total, subtotal, coupon, isCouponApplied, cart } = useCartStore()
-  const savings = subtotal - total
-  const formattedSubtotal = subtotal.toFixed(2)
-  const formattedTotal = total.toFixed(2)
+  const { mutate: saveMutation } = saveCart()
+  const { zucart: cart, zucoupon } = useCartStore()
+  const savings = cart.cartTotals.subtotal - cart.cartTotals.total
+  const formattedSubtotal = cart.cartTotals.subtotal.toFixed(2)
+  const formattedTotal = cart.cartTotals.total.toFixed(2)
   const formattedSavings = savings.toFixed(2)
 
   const handlePayment = async () => {
+    const response = saveMutation(cart)
     const stripe = await stripePromise
     const res = await axiosInstance.post("/payments/session", {
-      products: cart,
-      couponCode: coupon ? coupon.code : null,
+      products: cart.cartItems,
+      couponCode: !zucoupon?.isActive ? zucoupon?.code : null,
     })
     const session = res.data
     const result = await stripe.redirectToCheckout({
@@ -56,13 +59,13 @@ const OrderSummary = () => {
               </dd>
             </dl>
           )}
-          {coupon && isCouponApplied && (
+          {zucoupon && !zucoupon.isActive && (
             <dl className="flex items-center justify-between gap-4">
               <dt className="text-base font-normal text-gray-300">
-                Coupon ({coupon.code})
+                Coupon ({zucoupon.code})
               </dt>
               <dd className="text-base font-medium text-emerald-400">
-                -{coupon.discountPercentage}%
+                -{zucoupon.discountPercentage}%
               </dd>
             </dl>
           )}
@@ -81,6 +84,7 @@ const OrderSummary = () => {
         >
           Proceed to Checkout
         </motion.button>
+
         <div className="flex items-center justify-center gap-2">
           <span className="text-sm font-normal text-gray-400">or</span>
           <Link
