@@ -25,10 +25,10 @@ app.use("/api/coupons", couponRoute)
 app.use("/api/payments", paymentRoute)
 app.use("/api/analytics", analyticsRoute)
 
-app.use(express.static(path.join(_dirname, "fontend/dist")))
+app.use(express.static(path.join(_dirname, "frontend/dist")))
 
 app.get("*", (req, res) => {
-  res.sendFile(path.resolve(_dirname, "fontend", "dist", "index.html"))
+  res.sendFile(path.resolve(_dirname, "frontend", "dist", "index.html"))
 })
 
 app.listen(PORT, () => {
