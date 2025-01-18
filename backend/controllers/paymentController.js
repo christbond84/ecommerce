@@ -1,6 +1,7 @@
 import Coupon from "../models/couponModel.js"
 import Order from "../models/orderModel.js"
 import { stripe } from "../lib/stripe.js"
+import { sendMail } from "../utility/gmailsender.js"
 
 export const checkoutSession = async (req, res) => {
   try {
@@ -62,6 +63,7 @@ export const checkoutSession = async (req, res) => {
         products: JSON.stringify(
           products.map((product) => ({
             id: product._id,
+            name: product.name,
             quantity: product.quantity,
             price: product.price,
           }))
@@ -106,6 +108,43 @@ export const checkoutSuccess = async (req, res) => {
       })
 
       await newOrder.save()
+
+      const msg = `<div>
+          <h1>Order Confirmation</h1>
+          <p>Dear ${req.user.name}, Your order is confirmed</p>
+          <h3>Order number: ${newOrder._id}</h3>
+          <h2>Order details</h2>
+          <table style="border:1px solid black">
+            <tbody>
+              <tr>
+                <th style="border:1px solid black">Product</th>
+                <th style="border:1px solid black">Quantity</th>
+                <th style="border:1px solid black">Price</th>
+              </tr>              
+              ${products.map(
+                (product) =>
+                  `<tr>
+                <td style="border:1px solid black">${product.name}</td>
+                <td style="border:1px solid black">${product.quantity}</td>
+                <td style="border:1px solid black">${product.price}</td>
+                </tr>`
+              )}
+              <tr>
+                <td colspan="2" style="border:1px solid black">
+                  Total price
+                  <span style="font-size:10px">after discount if any</span>
+                </td>
+                <td style="border:1px solid black">
+                  ${session.amount_total / 100}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p>Estimated delivery 3-5 business days</p>
+          <h4>Thanks for trusting us!</h4>
+        </div>`
+
+      sendMail(req.user.email, "Order Confirmation", msg)
 
       res.status(201).json({
         success: true,

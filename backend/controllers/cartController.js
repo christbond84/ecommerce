@@ -98,7 +98,7 @@ export const updateTotal = async (req, res) => {
 export const saveCart = async (req, res) => {
   try {
     const { cart } = req.body
-    const cartItems = cart.cartItems.map((item) => ({
+    const cartItems = cart?.cartItems.map((item) => ({
       _id: item._id,
       quantity: item.quantity,
     }))

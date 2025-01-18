@@ -19,15 +19,15 @@ const Navbar = () => {
         <div className="flex flex-wrap justify-between items-center">
           <Link
             to={"/"}
-            className="className='text-2xl font-bold text-emerald-400 items-center space-x-2 flex"
+            className="className= text-3xl font-bold text-emerald-400 items-center space-x-2 flex"
           >
-            MERN Ecommerce
+            Glow MART
           </Link>
           <nav className="flex flex-wrap items-center gap-4">
             <button onClick={() => saveCartMutation(cart)}>
               <Link
                 to={"/"}
-                className="text-gray-300 hover:text-emerald-400 transition duration-300
+                className="block text-gray-300 hover:text-emerald-400 transition duration-300
 					 ease-in-out"
               >
                 Home
@@ -60,17 +60,23 @@ const Navbar = () => {
                 <span className="hidden sm:inline">Dashboard</span>
               </Link>
             )}
+
             {user ? (
-              <button
-                className="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-md flex items-center transition duration-300 ease-in-out"
-                onClick={() => {
-                  logoutMutation()
-                  clearStore()
-                }}
-              >
-                <LogOut size={18} />
-                <span className="hidden sm:inline ml-2">Log Out</span>
-              </button>
+              <div className="gap-0 translate-y-2">
+                <button
+                  className="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-md flex items-center transition duration-300 ease-in-out"
+                  onClick={() => {
+                    logoutMutation()
+                    clearStore()
+                  }}
+                >
+                  <LogOut size={18} />
+                  <span className="hidden sm:inline ml-2">Log Out</span>
+                </button>
+                <span className="flex items-center justify-center text-[0.5rem] text-emerald-400 animate-pulse">
+                  {user && user.name}
+                </span>
+              </div>
             ) : (
               <>
                 <Link
